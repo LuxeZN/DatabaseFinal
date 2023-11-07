@@ -13,6 +13,7 @@ class Database:
                 #connect to sql
                 connection = sqlite3.connect(self.file)
             else:
+                #db not initialized
                 self.initialize_db()
         else:
             root, dirs, files = os.walk('.db', topdown=False)
@@ -22,6 +23,7 @@ class Database:
                         #connect to sql
                         connection = sqlite3.connect(self.file)
                     else:
+                        #db not initialized
                         self.initialize_db()
                         
                 break
@@ -37,8 +39,24 @@ class Database:
                 return False
 
     def intialize_db(self):
-        pass
-
+        """Creates database and tables"""
+        connection = sqlite3.connect(self.file)
+        cursor = connection.cursor()
+        cursor.execute('''CREATE TABLE IF NOT EXISTS cve
+                        (cve_id text PRIMARY KEY NOT NULL, description text, cvss text, cwe text, 
+                        references text, phase text, votes text, comments text, 
+                        submitted_by text, date text
+                        CHECK(
+                            length(cve_id) = 13 AND
+                        ))''')
+        cursor.execute('''CREATE TABLE IF NOT EXISTS references
+                        (FOREIGN KEY (cve_id) REFERENCES cve (cve_id), reference text)''')
+        connection.commit()
+        connection.close()
 
     def load_database(self):
-        pass
+        for root, dirs, files in os.walk(self.cve_directory):
+            for f in files:
+                if f.endswith('.json'):
+                    with open(f, 'r') as cve_file:
+                        cve_json = json.load(cve_file)
