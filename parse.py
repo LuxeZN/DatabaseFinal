@@ -43,9 +43,9 @@ class Database:
         connection = sqlite3.connect(self.file)
         cursor = connection.cursor()
         cursor.execute('''CREATE TABLE IF NOT EXISTS cve
-                        (cve_id text PRIMARY KEY NOT NULL, description text, cvss text, cwe text, 
-                        references text, phase text, votes text, comments text, 
-                        submitted_by text, date text
+                        (cve_id text PRIMARY KEY NOT NULL, title text, description text, attack_complexity text, availability_impact text
+                        base_score int, base_severity text, confidentiality_impact text, privelages_required text,
+                        discovery text,  date text
                         CHECK(
                             length(cve_id) = 13 AND
                         ))''')
