@@ -39,19 +39,16 @@ class Database:
             else:
                 return False
 
-    def intialize_db(self):
+    def initialize_db(self):
         """Creates database and tables"""
         connection = sqlite3.connect(self.file)
         cursor = connection.cursor()
         cursor.execute('''CREATE TABLE IF NOT EXISTS cve
-                        (cve_id text PRIMARY KEY NOT NULL, title text, description text, attack_complexity text, availability_impact text
-                        base_score int, base_severity text, confidentiality_impact text, privelages_required text,
-                        discovery text,  date text
-                        CHECK(
-                            length(cve_id) = 13 AND
-                        ))''')
-        cursor.execute('''CREATE TABLE IF NOT EXISTS references
-                        (FOREIGN KEY (cve_id) REFERENCES cve (cve_id), reference text)''')
+                        (cve_id text PRIMARY KEY NOT NULL, title text, description text, attack_complexity text, availability_impact text,
+                        base_score int, base_severity text, confidentiality_impact text, priveleges_required text,
+                        discovery text,  date text)''')
+        cursor.execute('''CREATE TABLE IF NOT EXISTS cve_references
+                        (reference text, cve_id text, FOREIGN KEY (cve_id) REFERENCES cve(cve_id))''')
         connection.commit()
         connection.close()
 
@@ -61,3 +58,6 @@ class Database:
                 if f.endswith('.json'):
                     with open(f, 'r') as cve_file:
                         cve_json = json.load(cve_file)
+
+if __name__ == "__main__":
+    test = Database("cve.db", "cvelistV5-main")
