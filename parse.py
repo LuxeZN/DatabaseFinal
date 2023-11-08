@@ -54,11 +54,13 @@ class Database:
         connection.commit()
         connection.close()
 
+    
     def load_database(self):
         for root, dirs, files in os.walk(self.cve_directory):
             for f in files:
+                file_path = os.path.join(root, f)
                 if f.endswith('.json'):
-                    with open(f, 'r') as cve_file:
+                    with open(file_path, 'r') as cve_file:
                         cve_json = json.load(cve_file)
                         cve_id = cve_json['containers']['cna']['x_legacy_V4Record']['CVE_data_meta']['ID']
                         cve_title = cve_json['containers']['cna']['x_legacy_V4Record']['CVE_data_meta']['TITLE']
@@ -77,7 +79,8 @@ class Database:
                         cursor.execute('''INSERT INTO cve VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', 
                         (cve_id, cve_title, cve_desc, cve_attack, cve_availability, 
                         cve_base_score, cve_base_severity, cve_confidentiality, cve_privileges, cve_discovery, cve_date))
-                        cursor.execute('''INSERT INTO cve_references VALUES (?, ?)''', (cve_references, cve_id))
+                        for ref in cve_references:
+                            cursor.execute('''INSERT INTO cve_references VALUES (?, ?)''', (cve_references['url'], cve_id))
 
 
 if __name__ == "__main__":
