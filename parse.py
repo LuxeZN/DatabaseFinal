@@ -15,6 +15,7 @@ class Database:
             else:
                 #db not initialized
                 self.initialize_db()
+                self.load_database()
         else:
             root, dirs, files = os.walk('.db', topdown=False)
             for f in files:
@@ -26,6 +27,7 @@ class Database:
                     else:
                         #db not initialized
                         self.initialize_db()
+                        self.load_database()
                         
                 break
 
@@ -58,6 +60,25 @@ class Database:
                 if f.endswith('.json'):
                     with open(f, 'r') as cve_file:
                         cve_json = json.load(cve_file)
+                        cve_id = cve_json['containers']['cna']['x_legacy_V4Record']['CVE_data_meta']['ID']
+                        cve_title = cve_json['containers']['cna']['x_legacy_V4Record']['CVE_data_meta']['TITLE']
+                        cve_desc = cve_json['containers']['cna']['x_legacy_V4Record']['description']['descriptiondata'][0]['value']
+                        cve_attack = cve_json['containers']['cna']['x_legacy_V4Record']['impact']['cvss']['attackComplexity']
+                        cve_availability = cve_json['containers']['cna']['x_legacy_V4Record']['impact']['cvss']['availabilityImpact']
+                        cve_base_score = cve_json['containers']['cna']['x_legacy_V4Record']['impact']['cvss']['baseScore']
+                        cve_base_severity = cve_json['containers']['cna']['x_legacy_V4Record']['impact']['cvss']['baseSeverity']
+                        cve_confidentiality = cve_json['containers']['cna']['x_legacy_V4Record']['impact']['cvss']['confidentialityImpact']
+                        cve_privileges = cve_json['containers']['cna']['x_legacy_V4Record']['impact']['cvss']['privilegesRequired']
+                        cve_discovery = cve_json['containers']['cna']['x_legacy_V4Record']['source']['discovery']
+                        cve_date = cve_json['containers']['cna']['x_legacy_V4Record']['CVE_data_meta']['DATE_PUBLIC']
+                        cve_references = cve_json['containers']['cna']['x_legacy_V4Record']['references']['reference_data']
+                        connection = sqlite3.connect(self.file)
+                        cursor = connection.cursor()
+                        cursor.execute('''INSERT INTO cve VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', 
+                        (cve_id, cve_title, cve_desc, cve_attack, cve_availability, 
+                        cve_base_score, cve_base_severity, cve_confidentiality, cve_privileges, cve_discovery, cve_date))
+                        cursor.execute('''INSERT INTO cve_references VALUES (?, ?)''', (cve_references, cve_id))
+
 
 if __name__ == "__main__":
     test = Database("cve.db", "cvelistV5-main")
