@@ -62,58 +62,18 @@ class Database:
                 if f.endswith('.json'):
                     with open(file_path, 'r') as cve_file:
                         cve_json = json.load(cve_file)
-                        try:
-                            cve_id = cve_json['containers']['cna']['x_legacyV4Record']['CVE_data_meta']['ID']
-                        except KeyError:
-                            cve_id = 'NULL'
-                        try:
-                            cve_title = cve_json['containers']['cna']['x_legacyV4Record']['CVE_data_meta']['TITLE']
-                        except KeyError:
-                            cve_title = 'NULL'
-                        try:
-                            cve_desc = cve_json['containers']['cna']['x_legacyV4Record']['description']['descriptiondata'][0]['value']
-                        except KeyError:
-                            cve_desc = 'NULL'
-                        try:
-                            cve_attack = cve_json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['attackComplexity']
-                        except KeyError:
-                            cve_attack = 'NULL'
-                        except TypeError:
-                            print(file_path)
-
-
-                        try:
-                            cve_availability = cve_json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['availabilityImpact']
-                        except KeyError:
-                            cve_availability = 'NULL'
-                        try:
-                            cve_base_score = cve_json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['baseScore']
-                        except KeyError:
-                            cve_base_score = 'NULL'
-                        try:
-                            cve_base_severity = cve_json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['baseSeverity']
-                        except KeyError:
-                            cve_base_severity = 'NULL'
-                        try:
-                            cve_confidentiality = cve_json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['confidentialityImpact']
-                        except KeyError:
-                            cve_confidentiality = 'NULL'
-                        try:
-                            cve_privileges = cve_json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['privilegesRequired']
-                        except KeyError:
-                            cve_privileges = 'NULL'
-                        try:
-                            cve_discovery = cve_json['containers']['cna']['x_legacyV4Record']['source']['discovery']
-                        except KeyError:
-                            cve_discovery = 'NULL'
-                        try:
-                            cve_date = cve_json['containers']['cna']['x_legacyV4Record']['CVE_data_meta']['DATE_PUBLIC']
-                        except KeyError:
-                            cve_date = 'NULL'
-                        try:
-                            cve_references = cve_json['containers']['cna']['x_legacyV4Record']['references']['reference_data']
-                        except KeyError:
-                            cve_references = []
+                        cve_id = f[:-5]
+                        cve_title = find_cve_title(cve_json)
+                        cve_desc = find_cve_desc(cve_json)
+                        cve_attack = find_cve_attack(cve_json)
+                        cve_availability = find_cve_avail(cve_json)
+                        cve_base_score = find_base_score(cve_json)
+                        cve_base_severity = find_cve_severity(cve_json)
+                        cve_confidentiality = find_cve_confidentiality(cve_json)
+                        cve_privileges = find_cve_privileges(cve_json)
+                        cve_discovery = find_cve_discovery(cve_json)
+                        cve_date = find_cve_date(cve_json)
+                        cve_references = find_cve_references(cve_json)
                         connection = sqlite3.connect(self.file)
                         cursor = connection.cursor()
                         cursor.execute('''INSERT INTO cve VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', 
@@ -122,11 +82,116 @@ class Database:
                         for ref in cve_references:
                             try:
                                 cursor.execute('''INSERT INTO cve_references VALUES (?, ?)''', (ref['url'], cve_id))
-                            except KeyError:
+                            except:
                                 pass
                         connection.commit()
                         connection.close()
 
+def find_cve_title(json: dict) -> str:
+    try:
+        cve_title = json['containers']['cna']['x_legacyV4Record']['CVE_data_meta']['TITLE']
+        return cve_title
+    except KeyError:
+        cve_title = 'NULL'
+    try:
+        cve_title = json['containers']['cna']['title']
+        return cve_title
+    except KeyError:
+        cve_title = 'NULL'
+    return 'NULL'
 
+def find_cve_desc(json: dict) -> str:
+    try:
+        cve_desc = json['containers']['cna']['x_legacyV4Record']['description']['descriptiondata'][0]['value']
+        return cve_desc
+    except:
+        cve_desc = 'NULL'
+    try:
+        cve_desc = json['containers']['cna']['descriptions'][0]['value']
+        return cve_desc
+    except:
+        cve_desc = 'NULL'
+    return 'NULL'
+
+def find_cve_attack(json: dict) -> str:
+    try:
+        cve_attack = json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['attackComplexity']
+        return cve_attack
+    except:
+        cve_attack = 'NULL'
+    try:
+        cve_attack = json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['attackVector']
+        return cve_attack
+    except:
+        cve_attack = 'NULL'
+    return 'NULL'
+
+def find_cve_avail(json:dict) -> str:
+    try:
+        cve_avail = json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['availabilityImpact']
+        return cve_avail
+    except:
+        cve_avail = 'NULL'
+    try:
+        cve_avail = json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['availabilityImpact']
+        return cve_avail
+    except:
+        cve_avail = 'NULL'
+    return 'NULL'
+
+def find_base_score(json: dict) -> int:
+    try:
+        cve_base_score = json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['baseScore']
+        return cve_base_score
+    except:
+        cve_base_score = 'NULL'
+    return 'NULL'
+
+def find_cve_severity(json: dict) -> str:
+    try:
+        cve_severity = json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['baseSeverity']
+        return cve_severity
+    except:
+        cve_severity = 'NULL'
+    return 'NULL'
+
+def find_cve_confidentiality(json: dict) -> str:
+    try:
+        cve_confidentiality = json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['confidentialityImpact']
+        return cve_confidentiality
+    except:
+        cve_confidentiality = 'NULL'
+    return 'NULL'
+
+def find_cve_privileges(json: dict) -> str:
+    try:
+        cve_privileges = json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['privilegesRequired']
+        return cve_privileges
+    except:
+        cve_privileges = 'NULL'
+    return 'NULL'
+
+def find_cve_discovery(json: dict) -> str:
+    try:
+        cve_discovery = json['containers']['cna']['x_legacyV4Record']['source']['discovery']
+        return cve_discovery
+    except:
+        cve_discovery = 'NULL'
+    return 'NULL'
+
+def find_cve_date(json: dict) -> str:
+    try:
+        cve_date = json['containers']['cna']['x_legacyV4Record']['CVE_data_meta']['DATE_PUBLIC']
+        return cve_date
+    except:
+        cve_date = 'NULL'
+    return 'NULL'
+def find_cve_references(json: dict) -> list:
+    try:
+        cve_references = json['containers']['cna']['x_legacyV4Record']['references']['reference_data']
+        return cve_references
+    except:
+        cve_references = []
+    return cve_references
 if __name__ == "__main__":
     test = Database("cve.db", "cvelistV5-main")
