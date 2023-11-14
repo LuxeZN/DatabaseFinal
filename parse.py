@@ -48,7 +48,7 @@ class Database:
         cursor.execute('''CREATE TABLE IF NOT EXISTS cve
                         (cve_id text PRIMARY KEY NOT NULL, title text, description text, attack_complexity text, availability_impact text,
                         base_score int, base_severity text, confidentiality_impact text, priveleges_required text,
-                        discovery text,  date text)''')
+                        date text)''')
         cursor.execute('''CREATE TABLE IF NOT EXISTS cve_references
                         (reference text, cve_id text, FOREIGN KEY (cve_id) REFERENCES cve(cve_id))''')
         connection.commit()
@@ -62,29 +62,23 @@ class Database:
                 if f.endswith('.json'):
                     with open(file_path, 'r') as cve_file:
                         cve_json = json.load(cve_file)
+                        cve_read_lines = cve_file.readlines()
                         cve_id = f[:-5]
-                        cve_title = find_cve_title(cve_json)
-                        """ if (cve_title == 'NULL') :
-                            print(file_path) """
-                        cve_desc = find_cve_desc(cve_json)
-                        cve_attack = find_cve_attack(cve_json)
-                        cve_availability = find_cve_avail(cve_json)
-                        if (cve_availability == 'NULL') :
-                            print(file_path)
-                        cve_base_score = find_base_score(cve_json)
-                        """ if (cve_base_score == 'NULL') :
-                            print(file_path) """
-                        cve_base_severity = find_cve_severity(cve_json)
-                        cve_confidentiality = find_cve_confidentiality(cve_json)
-                        cve_privileges = find_cve_privileges(cve_json)
-                        cve_discovery = find_cve_discovery(cve_json)
-                        cve_date = find_cve_date(cve_json)
-                        cve_references = find_cve_references(cve_json)
+                        cve_title = find_cve_title(cve_json, cve_read_lines)
+                        cve_desc = find_cve_desc(cve_json, cve_read_lines)
+                        cve_attack = find_cve_attack(cve_json, cve_read_lines)
+                        cve_availability = find_cve_avail(cve_json, cve_read_lines)
+                        cve_base_score = find_base_score(cve_json, cve_read_lines)
+                        cve_base_severity = find_cve_severity(cve_json, cve_read_lines)
+                        cve_confidentiality = find_cve_confidentiality(cve_json, cve_read_lines)
+                        cve_privileges = find_cve_privileges(cve_json, cve_read_lines)
+                        cve_date = find_cve_date(cve_json, cve_read_lines)
+                        cve_references = find_cve_references(cve_json, cve_read_lines)
                         connection = sqlite3.connect(self.file)
                         cursor = connection.cursor()
-                        cursor.execute('''INSERT INTO cve VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', 
+                        cursor.execute('''INSERT INTO cve VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', 
                         (cve_id, cve_title, cve_desc, cve_attack, cve_availability, 
-                        cve_base_score, cve_base_severity, cve_confidentiality, cve_privileges, cve_discovery, cve_date))
+                        cve_base_score, cve_base_severity, cve_confidentiality, cve_privileges, cve_date))
                         for ref in cve_references:
                             try:
                                 cursor.execute('''INSERT INTO cve_references VALUES (?, ?)''', (ref['url'], cve_id))
@@ -93,20 +87,21 @@ class Database:
                         connection.commit()
                         connection.close()
 
-def find_cve_title(json: dict) -> str:
+def find_cve_title(json: dict, file) -> str:
     try:
         cve_title = json['containers']['cna']['x_legacyV4Record']['CVE_data_meta']['TITLE']
         return cve_title
-    except KeyError:
-        cve_title = 'NULL'
-    try:
-        cve_title = json['containers']['cna']['title']
+    except:
+        pass
+    file_title = file.find('title')
+    if file_title != -1:
+        cve_title = file[file_title + 7 : -6]
         return cve_title
-    except KeyError:
+    else:
         cve_title = 'NULL'
     return 'NULL'
 
-def find_cve_desc(json: dict) -> str:
+def find_cve_desc(json: dict, file) -> str:
     try:
         cve_desc = json['containers']['cna']['x_legacyV4Record']['description']['descriptiondata'][0]['value']
         return cve_desc
@@ -119,14 +114,9 @@ def find_cve_desc(json: dict) -> str:
         cve_desc = 'NULL'
     return 'NULL'
 
-def find_cve_attack(json: dict) -> str:
+def find_cve_attack(json: dict, file) -> str:
     try:
         cve_attack = json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['attackComplexity']
-        return cve_attack
-    except:
-        cve_attack = 'NULL'
-    try:
-        cve_attack = json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['attackVector']
         return cve_attack
     except:
         cve_attack = 'NULL'
@@ -138,9 +128,19 @@ def find_cve_attack(json: dict) -> str:
         cve_attack = json['containers']['cna']['metrics'][0]['cvssV3_0']['attackComplexity']
     except:
         cve_attack = 'NULL'
+    try:
+        cve_attack = json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['attackComplexity']
+    except:
+        cve_attack = 'NULL'
+    for line in file:
+        if line.find('attackComplexity') != -1:
+            cve_attack = line[line.find('attackComplexity') + 20 : -2]
+            return cve_attack
+        else:
+            cve_attack = 'NULL'
     return 'NULL'
 
-def find_cve_avail(json:dict) -> str:
+def find_cve_avail(json: dict, file) -> str:
     try:
         cve_avail = json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['availabilityImpact']
         return cve_avail
@@ -159,9 +159,15 @@ def find_cve_avail(json:dict) -> str:
         cve_avail = json['containers']['cna']['metrics'][0]['cvssV3_0']['availabilityImpact']
     except:
         cve_avail = 'NULL'
+    for line in file:
+        if line.find('availabilityImpact') != -1:
+            cve_attack = line[line.find('availabilityImpact') + 22 : -2]
+            return cve_attack
+        else:
+            cve_attack = 'NULL'
     return 'NULL'
 
-def find_base_score(json: dict) -> int:
+def find_base_score(json: dict, file) -> int:
     try:
         cve_base_score = json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['baseScore']
         return cve_base_score
@@ -175,9 +181,15 @@ def find_base_score(json: dict) -> int:
         cve_base_score = json['containers']['cna']['metrics'][0]['cvssV3_0']['baseScore']
     except:
         cve_base_score = 'NULL'
+    for line in file:
+        if line.find('baseScore') != -1:
+            cve_attack = line[line.find('baseScore') + 11 : -1]
+            return cve_attack
+        else:
+            cve_attack = 'NULL'
     return 'NULL'
 
-def find_cve_severity(json: dict) -> str:
+def find_cve_severity(json: dict, file) -> str:
     try:
         cve_severity = json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['baseSeverity']
         return cve_severity
@@ -191,9 +203,15 @@ def find_cve_severity(json: dict) -> str:
         cve_severity = json['containers']['cna']['metrics'][0]['cvssV3_0']['baseSeverity']
     except:
         cve_severity = 'NULL'
+    for line in file:
+        if line.find('baseSeverity') != -1:
+            cve_attack = line[line.find('baseSeverity') + 16 : -2]
+            return cve_attack
+        else:
+            cve_attack = 'NULL'
     return 'NULL'
 
-def find_cve_confidentiality(json: dict) -> str:
+def find_cve_confidentiality(json: dict, file) -> str:
     try:
         cve_confidentiality = json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['confidentialityImpact']
         return cve_confidentiality
@@ -207,9 +225,15 @@ def find_cve_confidentiality(json: dict) -> str:
         cve_confidentiality = json['containers']['cna']['metrics'][0]['cvssV3_0']['confidentialityImpact']
     except:
         cve_confidentiality = 'NULL'
+    for line in file:
+        if line.find('confidentialityImpact') != -1:
+            cve_confidentiality = line[line.find('confidentialityImpact') + 25 : -2]
+            return cve_confidentiality
+        else:
+            cve_confidentiality = 'NULL'
     return 'NULL'
 
-def find_cve_privileges(json: dict) -> str:
+def find_cve_privileges(json: dict, file) -> str:
     try:
         cve_privileges = json['containers']['cna']['x_legacyV4Record']['impact']['cvss']['privilegesRequired']
         return cve_privileges
@@ -223,17 +247,15 @@ def find_cve_privileges(json: dict) -> str:
         cve_privileges = json['containers']['cna']['metrics'][0]['cvssV3_0']['privelagesRequired']
     except:
         cve_privileges = 'NULL'
+    for line in file:
+        if line.find('privilegesRequired') != -1:
+            cve_privileges = line[line.find('privilegesRequired') + 24 : -2]
+            return cve_privileges
+        else:
+            cve_privileges = 'NULL'
     return 'NULL'
 
-def find_cve_discovery(json: dict) -> str:
-    try:
-        cve_discovery = json['containers']['cna']['x_legacyV4Record']['source']['discovery']
-        return cve_discovery
-    except:
-        cve_discovery = 'NULL'
-    return 'NULL'
-
-def find_cve_date(json: dict) -> str:
+def find_cve_date(json: dict, file) -> str:
     try:
         cve_date = json['containers']['cna']['x_legacyV4Record']['CVE_data_meta']['DATE_PUBLIC']
         return cve_date
@@ -245,7 +267,7 @@ def find_cve_date(json: dict) -> str:
         cve_date = 'NULL'
     return 'NULL'
 
-def find_cve_references(json: dict) -> list:
+def find_cve_references(json: dict, file) -> list:
     try:
         cve_references = json['containers']['cna']['x_legacyV4Record']['references']['reference_data']
         return cve_references
