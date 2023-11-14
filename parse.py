@@ -93,12 +93,12 @@ def find_cve_title(json: dict, file) -> str:
         return cve_title
     except:
         pass
-    file_title = file.find('title')
-    if file_title != -1:
-        cve_title = file[file_title + 7 : -6]
-        return cve_title
-    else:
-        cve_title = 'NULL'
+    for line in file:
+        if line.find('title') != -1:
+            cve_title = line[line.find('title') + 9 : -2]
+            return cve_title
+        else:
+            cve_title = 'NULL'
     return 'NULL'
 
 def find_cve_desc(json: dict, file) -> str:
@@ -263,6 +263,7 @@ def find_cve_date(json: dict, file) -> str:
         cve_date = 'NULL'
     try:
         cve_date = json['cveMetadata']['datePublished']
+        return cve_date
     except:
         cve_date = 'NULL'
     return 'NULL'
