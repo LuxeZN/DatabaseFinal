@@ -64,13 +64,13 @@ class Database:
                         cve_json = json.load(cve_file)
                         cve_id = f[:-5]
                         cve_title = find_cve_title(cve_json)
-                        if (cve_title == 'NULL') :
-                            print(file_path)
+                        """ if (cve_title == 'NULL') :
+                            print(file_path) """
                         cve_desc = find_cve_desc(cve_json)
                         cve_attack = find_cve_attack(cve_json)
                         cve_availability = find_cve_avail(cve_json)
-                        """ if (cve_availability == 'NULL') :
-                            print(file_path) """
+                        if (cve_availability == 'NULL') :
+                            print(file_path)
                         cve_base_score = find_base_score(cve_json)
                         """ if (cve_base_score == 'NULL') :
                             print(file_path) """
@@ -134,6 +134,10 @@ def find_cve_attack(json: dict) -> str:
         cve_attack = json['containers']['cna']['metrics'][0]['cvssV3_1']['attackComplexity']
     except:
         cve_attack = 'NULL'
+    try:
+        cve_attack = json['containers']['cna']['metrics'][0]['cvssV3_0']['attackComplexity']
+    except:
+        cve_attack = 'NULL'
     return 'NULL'
 
 def find_cve_avail(json:dict) -> str:
@@ -151,6 +155,10 @@ def find_cve_avail(json:dict) -> str:
         cve_avail = json['containers']['cna']['metrics'][0]['cvssV3_1']['availabilityImpact']
     except:
         cve_avail = 'NULL'
+    try:
+        cve_avail = json['containers']['cna']['metrics'][0]['cvssV3_0']['availabilityImpact']
+    except:
+        cve_avail = 'NULL'
     return 'NULL'
 
 def find_base_score(json: dict) -> int:
@@ -161,6 +169,10 @@ def find_base_score(json: dict) -> int:
         cve_base_score = 'NULL'
     try:
         cve_base_score = json['containers']['cna']['metrics'][0]['cvssV3_1']['baseScore']
+    except:
+        cve_base_score = 'NULL'
+    try:
+        cve_base_score = json['containers']['cna']['metrics'][0]['cvssV3_0']['baseScore']
     except:
         cve_base_score = 'NULL'
     return 'NULL'
@@ -175,6 +187,10 @@ def find_cve_severity(json: dict) -> str:
         cve_severity = json['containers']['cna']['metrics'][0]['cvssV3_1']['baseSeverity']
     except:
         cve_severity = 'NULL'
+    try:
+        cve_severity = json['containers']['cna']['metrics'][0]['cvssV3_0']['baseSeverity']
+    except:
+        cve_severity = 'NULL'
     return 'NULL'
 
 def find_cve_confidentiality(json: dict) -> str:
@@ -187,6 +203,10 @@ def find_cve_confidentiality(json: dict) -> str:
         cve_confidentiality = json['containers']['cna']['metrics'][0]['cvssV3_1']['confidentialityImpact']
     except:
         cve_confidentiality = 'NULL'
+    try:
+        cve_confidentiality = json['containers']['cna']['metrics'][0]['cvssV3_0']['confidentialityImpact']
+    except:
+        cve_confidentiality = 'NULL'
     return 'NULL'
 
 def find_cve_privileges(json: dict) -> str:
@@ -197,6 +217,10 @@ def find_cve_privileges(json: dict) -> str:
         cve_privileges = 'NULL'
     try:
         cve_privileges = json['containers']['cna']['metrics'][0]['cvssV3_1']['privelagesRequired']
+    except:
+        cve_privileges = 'NULL'
+    try:
+        cve_privileges = json['containers']['cna']['metrics'][0]['cvssV3_0']['privelagesRequired']
     except:
         cve_privileges = 'NULL'
     return 'NULL'
@@ -220,9 +244,15 @@ def find_cve_date(json: dict) -> str:
     except:
         cve_date = 'NULL'
     return 'NULL'
+
 def find_cve_references(json: dict) -> list:
     try:
         cve_references = json['containers']['cna']['x_legacyV4Record']['references']['reference_data']
+        return cve_references
+    except:
+        cve_references = []
+    try:
+        cve_references = json['containers']['cna']['references']
         return cve_references
     except:
         cve_references = []
