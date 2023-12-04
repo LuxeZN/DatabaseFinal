@@ -13,13 +13,13 @@
   }
 }
 
-.App-header {
+.container {
   background-color: #282c34;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: top;
   font-size: calc(10px + 2vmin);
   color: white;
 }
@@ -65,4 +65,37 @@
 .topnav a.active {
   background-color: #04AA6D;
   color: white;
+}
+
+.table-row {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  align-self: stretch;
+}
+
+.table-cell {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #000;
+}
+
+.table-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tableContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+ul {
+  width: 100%;
+}
+
+.parent-container {
+  display: flex;
 }
