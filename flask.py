@@ -6,30 +6,85 @@ app = Flask(__name__)
 def home():
    return render_template('home.html')
 
-@app.route('/enternew')
-def new_student():
-   return render_template('student.html')
-
 @app.route('/getrange')
 def get_range(lower_bound : int, upper_bound : int): 
    con = sql.connect("cve.db")
    cur = con.cursor()
    cur.execute("SELECT * FROM cve LIMIT ? OFFSET ?", ((upper_bound - lower_bound), lower_bound))
 
-   result = cur.fetchall()
-   return render_template("getrange.html", result = result)
+   result = cur.fetchall();
+   return render_template("get_range.html", result = result)
    
 
 @app.route('/filter')
-def filter():
+def filter(cve_id : str = None, title : str = None, description : str = None, attack_comp : str = None,
+           avail_impact : str = None, base_score : str = None, base_severity : str = None, confid_impact : str = None,
+           privelages : str = None, date = None):
+   
+   #initial declarations
+   filters = [cve_id, title, description, attack_comp, avail_impact, base_score, base_severity, confid_impact, privelages, date]
+   statements = ["cve_id", "title", "description", "attack_compleity", "availability_impact", 
+                 "base_score", "base_severity", "confidentiality_impact", "privelages_required", "date"]
+   equals_string = " = "
+
+   #get all filters that were passed something
+   for i in filters:
+      if i != None:
+         temp = equals_string + '"' + i + '"'
+         statements[filters.index(i)] += temp
+
+   #construct query
+   query = "SELECT * FROM cve WHERE "
+   for i in statements:
+      if i.__contains__("="):
+         query += i + " AND "
+   query = query[:-5]
+
+   #actually do the work and return results
    con = sql.connect("cve.db")
-   con.row_factory = sql.Row
-   
    cur = con.cursor()
-   cur.execute("select * from students")
-   
-   rows = cur.fetchall()
-   return render_template("list.html",rows = rows)
+   cur.execute(query)
+   result = cur.fetchall();
+   return render_template("filter.html", result = result)
+
+@app.route('/last_5_bs_graph')
+def last_5_bs_graph():
+   years = ["2017", "2018", "2019", "2020", "2021", "2022"]
+   data = []
+   bases = ['Low', 'Medium', 'High']
+   con = sql.connect("cve.db")
+   cur = con.cursor()
+   for year in years:
+        temp_list = []
+        for base in bases:
+            temp_year = "%" + year + "%"
+            cur.execute("SELECT * FROM cve WHERE cve_id LIKE ? AND base_severity LIKE ?", (temp_year, base))
+            result = cur.fetchall();
+            temp_list.append(len(result))
+        data.append(temp_list)
+
+#not sure what to return here, can return all data or can actually make graph and return that
+   return render_template('graphs.html')
+
+@app.route('/num_cves_by_year')
+def num_cves_by_year():
+   years = ["1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", 
+            "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", 
+            "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023"]
+   data = []
+   con = sql.connect("cve.db")
+   cur = con.cursor()
+   for year in years:
+      temp_year = "%" + year + "%"
+      cur.execute("SELECT COUNT(*) FROM cve WHERE cve_id LIKE ?", (temp_year,))
+      result = cur.fetchone();
+      data.append(result[0])
+
+   #not sure what to return here, can return all data or can actually make graph and return that
+   return render_template('graphs.html')
+
+
+
 
 if __name__ == '__main__':
    app.run(debug = True)
