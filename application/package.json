@@ -3,14 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@mdi/js": "^7.3.67",
+    "@mdi/react": "^1.6.1",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "chart.js": "^4.4.1",
     "electron-quick-start": "^1.0.0",
+    "prismjs": "^1.29.0",
     "react": "^18.2.0",
+    "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
+    "react-simple-code-editor": "^0.13.1",
     "react-terminal": "^1.4.4",
+    "sweetalert2": "^11.10.1",
+    "sweetalert2-react-content": "^5.0.7",
     "web-vitals": "^2.1.4"
   },
   "main": "src/electron-starter.js",
@@ -40,6 +48,7 @@
     ]
   },
   "devDependencies": {
+    "@faker-js/faker": "^8.3.1",
     "elecron": "^0.0.1-security",
     "electron": "^27.0.4"
   }

@@ -1,3 +1,4 @@
+
 .App {
   text-align: center;
 }
@@ -67,6 +68,15 @@
   color: white;
 }
 
+.menuBar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #282c50;
+  height: 40px;
+}
+
 .table-row {
   display: flex;
   justify-content: space-between;
@@ -99,3 +109,14 @@ ul {
 .parent-container {
   display: flex;
 }
+
+#index_terminalContainer__4seT6 {
+  width: 100%;
+}
+
+/*modal title */
+h2#swal2-title {
+  font-size: 1.5rem;
+  
+}
+
