@@ -12,6 +12,8 @@ import { highlight, languages } from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/themes/prism.css'; //Example style, you can use another
+import logo from './imgs/CVEDatabaseLogo.png';
+import biglogo from './imgs/CVEDatabaseLogoBig.png';
 
 ChartJS.register(
   CategoryScale,
@@ -80,7 +82,7 @@ function SortButton() {
   );
 }
 
-function TableHeader({columns = ["Name", "Number", "Platform", "Date"]}) {
+function TableHeader({ columns = ["Name", "Number", "Platform", "Date"] }) {
   return (
     <div className="table-row">
       {columns.map((column, index) => (
@@ -107,7 +109,19 @@ function TableComponent({ number = 0, name = "n/a", platform = "n/a", date = "n/
 function HomeContainer() {
   return (
     <div className='container'>
-      <h1>Not Sure what should go here tbh</h1>
+      <img src={biglogo} alt='logo' style={{ justifyContent: 'center' }} />
+      <p style={{ textAlign: 'center' }}>Welcome to the CVE Database!</p>
+      <div className='home-para'>
+        <p style={{ textAlign: 'center', fontSize: '20px' }}>
+          The purpose of this application is to make it easier to access and manipulate 
+          CVEs(Common Vulnerabilities and Exposures) while avoiding the slow and archaic website
+          that <a href='https://cve.mitre.org/' target='_blank' style={{color:'#5ac5fe'}}>The MITRE Corporation</a></p>
+        <p style={{ textAlign: 'center', fontSize: '20px' }}>
+          It also takes this idea a step further by allowing users to create charts based on the CVE data.
+          Users are also able to create, maintain, and run Docker containers from within the application.
+        </p>
+      </div>
+
     </div>
   )
 }
@@ -122,11 +136,11 @@ function TableContainer() {
   return (
     <div className="container">
       <ul className='table-list'>
-        <TableHeader 
-        name = "Name"
-        number = "Number"
-        platform = "Platform"
-        date = "Date"
+        <TableHeader
+          name="Name"
+          number="Number"
+          platform="Platform"
+          date="Date"
         />
         {components.map((component, index) =>
           <li key={index}>
@@ -303,11 +317,13 @@ function App() {
 
     <div className="App">
 
-      <div class="topnav">
-        <a className={activeTab === 'home' ? 'active' : ''} onClick={() => setActiveTab('home')}>Home</a>
-        <a className={activeTab === 'table' ? 'active' : ''} onClick={() => setActiveTab('table')}>Table</a>
-        <a className={activeTab === 'graph' ? 'active' : ''} onClick={() => setActiveTab('graph')}>Graph</a>
-        <a className={activeTab === 'containers' ? 'active' : ''} onClick={() => setActiveTab('containers')}>Docker Containers</a>
+      <div className="topnav">
+        <a className={"home-tab"} onClick={() => setActiveTab('home')}>
+          <img src={logo} alt='logo' width='75px' height='50px' style={{}} />
+        </a>
+        <a className={`other-tab ${activeTab === 'table' ? 'active' : ''}`} onClick={() => setActiveTab('table')}>Table</a>
+        <a className={`other-tab ${activeTab === 'graph' ? 'active' : ''}`} onClick={() => setActiveTab('graph')}>Graph</a>
+        <a className={`other-tab ${activeTab === 'containers' ? 'active' : ''}`} onClick={() => setActiveTab('containers')}>Docker Containers</a>
       </div>
 
       {content}

@@ -15,7 +15,7 @@
 }
 
 .container {
-  background-color: #282c34;
+  background-color: #222831;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -40,32 +40,43 @@
 
 /* Add a black background color to the top navigation */
 .topnav {
-  background-color: #333;
+  background-color: #393E46;
   overflow: hidden;
   display: flex;
-  justify-content: center;
 }
 
 /* Style the links inside the navigation bar */
 .topnav a {
   float: left;
-  color: #f2f2f2;
+  color: #5d829f;
   text-align: center;
   padding: 14px 16px;
   text-decoration: none;
-  font-size: 17px;
-}
+  font-size: 24px;
+  font-weight: bold;
 
-/* Change the color of links on hover */
-.topnav a:hover {
-  background-color: #ddd;
-  color: black;
 }
 
 /* Add a color to the active/current link */
 .topnav a.active {
-  background-color: #04AA6D;
+  color: #0092CA;
+  text-shadow: 3px 3px 2px #212121;
+
+}
+
+.home-tab {
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+.home-tab:hover {
+  color: black;
+  cursor: pointer;
+}
+
+.other-tab:hover {
+  background-color: #2b2e34;
   color: white;
+  cursor: pointer;
 }
 
 .menuBar {
@@ -73,7 +84,7 @@
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  background-color: #282c50;
+  background-color: #212121;
   height: 40px;
 }
 
@@ -120,3 +131,8 @@ h2#swal2-title {
   
 }
 
+.home-para{
+  width: 30%;
+
+  justify-content: center;
+}
