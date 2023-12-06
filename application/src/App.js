@@ -12,6 +12,8 @@ import { highlight, languages } from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/themes/prism.css'; //Example style, you can use another
+import logo from './imgs/CVEDatabaseLogo.png';
+import biglogo from './imgs/CVEDatabaseLogoBig.png';
 
 ChartJS.register(
   CategoryScale,
@@ -80,7 +82,7 @@ function SortButton() {
   );
 }
 
-function TableHeader({columns = ["Name", "Number", "Platform", "Date"]}) {
+function TableHeader({ columns = ["Name", "Number", "Platform", "Date"] }) {
   return (
     <div className="table-row">
       {columns.map((column, index) => (
@@ -107,38 +109,79 @@ function TableComponent({ number = 0, name = "n/a", platform = "n/a", date = "n/
 function HomeContainer() {
   return (
     <div className='container'>
-      <h1>Not Sure what should go here tbh</h1>
+      <img src={biglogo} alt='logo' style={{ justifyContent: 'center' }} />
+      <p style={{ textAlign: 'center' }}>Welcome to the CVE Database!</p>
+      <div className='home-para'>
+        <p style={{ textAlign: 'center', fontSize: '20px' }}>
+          The purpose of this application is to make it easier to access and manipulate
+          CVEs(Common Vulnerabilities and Exposures) while avoiding the slow and archaic website
+          that <a href='https://cve.mitre.org/' target='_blank' style={{ color: '#5ac5fe' }}>The MITRE Corporation</a></p>
+        <p style={{ textAlign: 'center', fontSize: '20px' }}>
+          It also takes this idea a step further by allowing users to create charts based on the CVE data.
+          Users are also able to create, maintain, and run Docker containers from within the application.
+        </p>
+      </div>
+
     </div>
   )
 }
 
-function TableContainer() {
+
+
+function TableContainer({ numEntries = 25 }) {
+  const [entries, setEntries] = useState(numEntries);
+  const [page, setPage] = useState(1);
+
+  function handleEntriesChange(event) {
+    setEntries(event.target.value);
+  }
+
   let components = []
-  for (let i = 1; i < 100; i++) {
+  for (let i = 1; i <= entries; i++) {
     components.push(<TableComponent />)
   }
 
-
   return (
-    <div className="container">
-      <ul className='table-list'>
-        <TableHeader 
-        name = "Name"
-        number = "Number"
-        platform = "Platform"
-        date = "Date"
-        />
-        {components.map((component, index) =>
-          <li key={index}>
-            {component}
-          </li>
-        )}
-      </ul>
-
+    <div>
+      <div className='menuBar'>
+        <select id="entries" onChange={handleEntriesChange} defaultValue={25}>
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+        <PageTurner entries={entries} numPages={10} page={page} setPage={setPage} />
+      </div>
+      <div className="container">
+        <ul className='table-list'>
+          <TableHeader
+            name="Name"
+            number="Number"
+            platform="Platform"
+            date="Date"
+          />
+          {components.map((component, index) =>
+            <li key={index}>
+              {component}
+            </li>
+          )}
+        </ul>
+        <PageTurner entries={entries} numPages={10} page={page} setPage={setPage} />
+      </div>
     </div>
   );
 }
 
+
+function PageTurner({ entries, numPages, page, setPage }) {
+  return (
+    <div>
+      <button onClick={() => setPage(page - 1)} disabled={page === 1}>Previous Page</button>
+      <label>{entries * (page - 1) + 1} - {entries * page} </label>
+      <button onClick={() => setPage(page + 1)} disabled={page === numPages}>Next Page</button>
+    </div>
+  );
+};
 function ChartModal() {
   return (
     <form>
@@ -267,7 +310,7 @@ function DockerContainer() {
               fontFamily: '"Fira code", "Fira Mono", monospace',
               fontSize: 16,
               width: '100%',
-              height: '100%'
+              height: '100%',
             }}
           />
 
@@ -280,9 +323,6 @@ function DockerContainer() {
 
   )
 }
-
-
-
 
 function App() {
   const [activeTab, setActiveTab] = useState('home');
@@ -303,11 +343,13 @@ function App() {
 
     <div className="App">
 
-      <div class="topnav">
-        <a className={activeTab === 'home' ? 'active' : ''} onClick={() => setActiveTab('home')}>Home</a>
-        <a className={activeTab === 'table' ? 'active' : ''} onClick={() => setActiveTab('table')}>Table</a>
-        <a className={activeTab === 'graph' ? 'active' : ''} onClick={() => setActiveTab('graph')}>Graph</a>
-        <a className={activeTab === 'containers' ? 'active' : ''} onClick={() => setActiveTab('containers')}>Docker Containers</a>
+      <div className="topnav">
+        <a className={"home-tab"} onClick={() => setActiveTab('home')}>
+          <img src={logo} alt='logo' width='75px' height='50px' style={{}} />
+        </a>
+        <a className={`other-tab ${activeTab === 'table' ? 'active' : ''}`} onClick={() => setActiveTab('table')}>Table</a>
+        <a className={`other-tab ${activeTab === 'graph' ? 'active' : ''}`} onClick={() => setActiveTab('graph')}>Graph</a>
+        <a className={`other-tab ${activeTab === 'containers' ? 'active' : ''}`} onClick={() => setActiveTab('containers')}>Docker Containers</a>
       </div>
 
       {content}
