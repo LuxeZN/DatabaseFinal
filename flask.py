@@ -45,7 +45,7 @@ def filter(cve_id : str = None, title : str = None, description : str = None, at
    cur = con.cursor()
    cur.execute(query)
    result = cur.fetchall();
-   return render_template("filter.html", result = result)
+   return render_template("filter.html", result)
 
 @app.route('/last_5_bs_graph')
 def last_5_bs_graph():
@@ -62,9 +62,10 @@ def last_5_bs_graph():
             result = cur.fetchall();
             temp_list.append(len(result))
         data.append(temp_list)
-
-#not sure what to return here, can return all data or can actually make graph and return that
-   return render_template('graphs.html')
+   final_data = []
+   for i in range(len(data)):
+      final_data.append([years[i], data[i]])
+   return render_template('last5bsgraph.html', final_data)
 
 @app.route('/num_cves_by_year')
 def num_cves_by_year():
@@ -79,9 +80,10 @@ def num_cves_by_year():
       cur.execute("SELECT COUNT(*) FROM cve WHERE cve_id LIKE ?", (temp_year,))
       result = cur.fetchone();
       data.append(result[0])
-
-   #not sure what to return here, can return all data or can actually make graph and return that
-   return render_template('graphs.html')
+   final_data = []
+   for i in range(len(data)):
+      final_data.append([years[i], data[i]])
+   return render_template('numcveperyear.html', final_data)
 
 @app.route('/avg_base_by_year')
 def avg_base_by_year():
@@ -96,9 +98,10 @@ def avg_base_by_year():
       cur.execute("SELECT avg(base_score) FROM cve WHERE cve_id LIKE ? AND base_score IS NOT NULL", (temp_year,))
       result = cur.fetchone();
       data.append(result[0])
-
-   #not sure what to return here, can return all data or can actually make graph and return that
-   return render_template('graphs.html')
+   final_data = []
+   for i in range(len(data)):
+      final_data.append([years[i], data[i]])
+   return render_template('avgbaseyear.html', final_data)
 
 @app.route('/base_score_10_by_year')
 def base_score_10_by_year():
@@ -113,9 +116,10 @@ def base_score_10_by_year():
       cur.execute("SELECT COUNT(*) FROM cve WHERE cve_id LIKE ? AND base_score = 10", (temp_year, ))
       result = cur.fetchone();
       data.append(result[0])
-
-   #not sure what to return here, can return all data or can actually make graph and return that
-   return render_template('graphs.html')
+   final_data = []
+   for i in range(len(data)):
+      final_data.append([years[i], data[i]])
+   return render_template('base10year.html', final_data)
 
 @app.route('/complex_by_year')
 def complex_by_year():
@@ -134,9 +138,10 @@ def complex_by_year():
          result = cur.fetchall();
          temp_list.append(len(result))
       data.append(temp_list)
-
-   #not sure what to return here, can return all data or can actually make graph and return that
-   return render_template('graphs.html')
+   final_data = []
+   for i in range(len(data)):
+      final_data.append([years[i], data[i]])
+   return render_template('complexperyear.html', final_data)
 
 @app.route('/availability_by_year')
 def availability_by_year():
@@ -155,6 +160,10 @@ def availability_by_year():
          result = cur.fetchall();
          temp_list.append(len(result))
       data.append(temp_list)
+   final_data = []
+   for i in range(len(data)):
+      final_data.append([years[i], data[i]])
+   return render_template('availabilityperyear.html', final_data)
 
 if __name__ == '__main__':
    app.run(debug = True)
