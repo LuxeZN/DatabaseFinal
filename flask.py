@@ -51,7 +51,7 @@ def filter(cve_id : str = None, title : str = None, description : str = None, at
 def last_5_bs_graph():
    years = ["2017", "2018", "2019", "2020", "2021", "2022"]
    data = []
-   bases = ['Low', 'Medium', 'High']
+   bases = ['Low', 'Medium', 'High', 'Critical']
    con = sql.connect("cve.db")
    cur = con.cursor()
    for year in years:
@@ -83,8 +83,78 @@ def num_cves_by_year():
    #not sure what to return here, can return all data or can actually make graph and return that
    return render_template('graphs.html')
 
+@app.route('/avg_base_by_year')
+def avg_base_by_year():
+   years = ["1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", 
+            "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", 
+            "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023"]
+   data = []
+   con = sql.connect("cve.db")
+   cur = con.cursor()
+   for year in years:
+      temp_year = "%" + year + "%"
+      cur.execute("SELECT avg(base_score) FROM cve WHERE cve_id LIKE ? AND base_score IS NOT NULL", (temp_year,))
+      result = cur.fetchone();
+      data.append(result[0])
 
+   #not sure what to return here, can return all data or can actually make graph and return that
+   return render_template('graphs.html')
 
+@app.route('/base_score_10_by_year')
+def base_score_10_by_year():
+   years = ["1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", 
+         "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", 
+         "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023"]
+   data = []
+   con = sql.connect("cve.db")
+   cur = con.cursor()
+   for year in years:
+      temp_year = "%" + year + "%"
+      cur.execute("SELECT COUNT(*) FROM cve WHERE cve_id LIKE ? AND base_score = 10", (temp_year, ))
+      result = cur.fetchone();
+      data.append(result[0])
+
+   #not sure what to return here, can return all data or can actually make graph and return that
+   return render_template('graphs.html')
+
+@app.route('/complex_by_year')
+def complex_by_year():
+   years = ["1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", 
+         "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", 
+         "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023"]
+   data = []
+   bases = ['Low', 'High']
+   con = sql.connect("cve.db")
+   cur = con.cursor()
+   for year in years:
+      temp_list = []
+      for base in bases:
+         temp_year = "%" + year + "%"
+         cur.execute("SELECT * FROM cve WHERE cve_id LIKE ? AND attack_complexity LIKE ?", (temp_year, base))
+         result = cur.fetchall();
+         temp_list.append(len(result))
+      data.append(temp_list)
+
+   #not sure what to return here, can return all data or can actually make graph and return that
+   return render_template('graphs.html')
+
+@app.route('/availability_by_year')
+def availability_by_year():
+   years = ["1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", 
+         "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", 
+         "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023"]
+   data = []
+   bases = ['Low', 'High']
+   con = sql.connect("cve.db")
+   cur = con.cursor()
+   for year in years:
+      temp_list = []
+      for base in bases:
+         temp_year = "%" + year + "%"
+         cur.execute("SELECT * FROM cve WHERE cve_id LIKE ? AND availability_impact LIKE ?", (temp_year, base))
+         result = cur.fetchall();
+         temp_list.append(len(result))
+      data.append(temp_list)
 
 if __name__ == '__main__':
    app.run(debug = True)
