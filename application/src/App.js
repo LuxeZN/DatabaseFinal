@@ -105,7 +105,7 @@ function TableComponent({ title = "n/a", ID = "n/a", description = "n/a", date =
         <div className="table-cell table-cell-outer-left" style={{display: 'flex', alignContent: 'center'}}>
         <FontAwesomeIcon icon={icon} className='dropdown' onClick={() => setOpen(!open)}/>
           {ID}</div>
-        <div className="table-cell">{title}</div>
+        <div className="table-cell cve-title">{title}</div>
         <div className="table-cell cell-description">
           {description}
         </div>

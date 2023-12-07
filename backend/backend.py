@@ -23,11 +23,11 @@ def get_range():
    cur.execute("SELECT * FROM cve LIMIT ? OFFSET ?", (upper_bound, lower_bound))
 
    result = cur.fetchall()
-   print(result)
    return result
 
+
 @app.route('/getrange_asc_desc')
-def get_range(): 
+def get_range_asc_dsc(): 
    lower_bound = int(request.args.get('lower_bound'))
    upper_bound = int(request.args.get('upper_bound'))
    asc_desc = request.args.get('asc_desc')
@@ -38,9 +38,9 @@ def get_range():
    cur.execute("SELECT * FROM cve LIMIT ? OFFSET ? ORDER BY ? ?", (upper_bound, lower_bound, column, asc_desc))
 
    result = cur.fetchall()
-   print(result)
    return result
-   
+
+
 
 @app.route('/filter')
 def filter(cve_id : str = None, title : str = None, description : str = None, attack_comp : str = None,

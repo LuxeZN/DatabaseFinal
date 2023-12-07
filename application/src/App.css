@@ -118,6 +118,13 @@
   white-space: nowrap;
 }
 
+
+.cve-title{
+  font-size: 18px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .table-cell-outer-right {
   border-radius: 0 10px 10px 0;
 }
