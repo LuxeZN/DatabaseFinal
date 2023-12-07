@@ -1,19 +1,30 @@
 from flask import Flask, render_template, request
+from flask_cors import CORS
 import sqlite3 as sql
 app = Flask(__name__)   
+CORS(app, support_credentials=True)
+
+#Runs with `flask --app backend.py run --debug`
 
 @app.route('/')
 def home():
    return render_template('home.html')
 
+
+#EXAMPLE REQUEST: `http://localhost:5000/getrange?lower_bound=25&upper_bound=100`
+#EXAMPLE REQUEST: `http://localhost:5000/getrange?lower_bound=0&upper_bound=25
 @app.route('/getrange')
-def get_range(lower_bound : int, upper_bound : int): 
+def get_range(): 
+   lower_bound = int(request.args.get('lower_bound'))
+   upper_bound = int(request.args.get('upper_bound'))
+   upper_bound = upper_bound - lower_bound
    con = sql.connect("cve.db")
    cur = con.cursor()
-   cur.execute("SELECT * FROM cve LIMIT ? OFFSET ?", ((upper_bound - lower_bound), lower_bound))
+   cur.execute("SELECT * FROM cve LIMIT ? OFFSET ?", (upper_bound, lower_bound))
 
-   result = cur.fetchall();
-   return render_template("get_range.html", result = result)
+   result = cur.fetchall()
+   print(result)
+   return result
    
 
 @app.route('/filter')

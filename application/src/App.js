@@ -1,13 +1,13 @@
 import './App.css';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Editor from 'react-simple-code-editor';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import { faker } from '@faker-js/faker';
 import Swal from 'sweetalert2';
-import Icon from '@mdi/react'
-import { mdiSortDescending, mdiSortAscending } from '@mdi/js'
 import withReactContent from 'sweetalert2-react-content';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faSort, faSortUp, faSortDown, faChevronRight, faChevronLeft, faArrowRight, faCaretRight, faCaretDown } from '@fortawesome/free-solid-svg-icons';
 import { highlight, languages } from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
@@ -57,50 +57,74 @@ function Chart() {
 
 function SortButton() {
   const [sort, setSort] = useState(0);
+
   function handleSortClick() {
-    console.log(sort)
-    if (sort === 0) {
-      setSort(1)
-    }
-    else if (sort === 1) {
-      setSort(0)
-    }
-
+    setSort((sort + 1) % 3);
   }
-  let icon = mdiSortAscending
+
+  let icon = faSort;
   if (sort === 0) {
-    icon = mdiSortAscending
-  }
-  else if (sort === 1) {
-    icon = mdiSortDescending
+    icon = faSort;
+  } else if (sort === 1) {
+    icon = faSortDown;
+  } else if (sort === 2) {
+    icon = faSortUp;
 
   }
+
   return (
-    <button onClick={handleSortClick} >
-      <Icon path={icon} size={0.85} />
-    </button>
+    <FontAwesomeIcon icon={icon} onClick={handleSortClick} />
   );
 }
 
 function TableHeader({ columns = ["Name", "Number", "Platform", "Date"] }) {
   return (
-    <div className="table-row">
-      {columns.map((column, index) => (
-        <div key={index} className="table-cell">
-          {column} <SortButton />
-        </div>
-      ))}
+    <div className="row-container" style={{ margin: '5px' }}>
+      <div className="table-row table-header">
+        {columns.map((column, index) => (
+          <div key={index} className={`table-cell ${index === 0 ? 'table-cell-outer-left' : ''} ${index === columns.length - 1 ? 'table-cell-outer-right' : ''}`}>
+            {column} <SortButton />
+          </div>
+        ))}
+      </div>
     </div>
   );
 
 }
-function TableComponent({ number = 0, name = "n/a", platform = "n/a", date = "n/a" }) {
+
+function TableComponent({ title = "n/a", ID = "n/a", description = "n/a", date = "n/a" }) {
+
+  const [open, setOpen] = useState(false);
+  let icon = faCaretRight;
+  open ? icon = faCaretDown : icon = faCaretRight;
+
+
   return (
-    <div className="table-row">
-      <div className="table-cell">{name}</div>
-      <div className="table-cell">{number}</div>
-      <div className="table-cell">{platform}</div>
-      <div className="table-cell">{date}</div>
+    <div className="row-container">
+      <div className="table-row">
+        <div className="table-cell table-cell-outer-left" style={{display: 'flex', alignContent: 'center'}}>
+        <FontAwesomeIcon icon={icon} className='dropdown' onClick={() => setOpen(!open)}/>
+          {ID}</div>
+        <div className="table-cell">{title}</div>
+        <div className="table-cell cell-description">
+          {description}
+        </div>
+        <div className="table-cell table-cell-outer-right">{date}</div>
+      </div>
+      {open && (
+        <div className="dropdown-area">
+          <div className='cve-dropdown-area'>
+            ID: {ID}
+            <br />
+            Title: {title}
+            <br />
+            Date: {date}
+            <br />
+            <br />
+            Description: {description}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -127,19 +151,41 @@ function HomeContainer() {
 }
 
 
-
 function TableContainer({ numEntries = 25 }) {
   const [entries, setEntries] = useState(numEntries);
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [components, setComponents] = useState([]);
 
   function handleEntriesChange(event) {
     setEntries(event.target.value);
   }
-
-  let components = []
-  for (let i = 1; i <= entries; i++) {
-    components.push(<TableComponent />)
+  function submitSearch() {
+    let searchValue = document.getElementById("search").value;
+    setSearch(searchValue);
   }
+
+
+  useEffect(() => {
+    fetch(`http://localhost:5000/getrange?lower_bound=${(entries * (page - 1) + 1) - 1}&upper_bound=${(entries * page) - 1}`)
+      .then(response => response.json())
+      .then(data => {
+        let newComponents = [];
+        for (let i = 0; i < data.length; i++) {
+          newComponents.push(
+            <TableComponent
+              ID={data[i][0]}
+              title={data[i][1]}
+              description={data[i][2]}
+              date={data[i][9]}
+            />
+          );
+        }
+        setComponents(newComponents);
+
+      })
+      .catch(error => console.error('Error:', error));
+  }, [entries, page]);
 
   return (
     <div>
@@ -150,15 +196,18 @@ function TableContainer({ numEntries = 25 }) {
           <option value="50">50</option>
           <option value="100">100</option>
         </select>
-        <PageTurner entries={entries} numPages={10} page={page} setPage={setPage} />
+        <PageTurner entries={entries} numPages={1000} page={page} setPage={setPage} />
+        <div>
+          <input className='search-bar' type="text" id="search" name="search" placeholder="Search.." />
+          <FontAwesomeIcon icon={faArrowRight} style={{ color: '#fffff' }} onClick={submitSearch} />
+        </div>
+
       </div>
       <div className="container">
         <ul className='table-list'>
           <TableHeader
-            name="Name"
-            number="Number"
-            platform="Platform"
-            date="Date"
+            columns={["ID", "Title", "Description", "Upload Date"]}
+
           />
           {components.map((component, index) =>
             <li key={index}>
@@ -166,7 +215,7 @@ function TableContainer({ numEntries = 25 }) {
             </li>
           )}
         </ul>
-        <PageTurner entries={entries} numPages={10} page={page} setPage={setPage} />
+        <PageTurner entries={entries} numPages={1000} page={page} setPage={setPage} />
       </div>
     </div>
   );
@@ -175,13 +224,30 @@ function TableContainer({ numEntries = 25 }) {
 
 function PageTurner({ entries, numPages, page, setPage }) {
   return (
-    <div>
-      <button onClick={() => setPage(page - 1)} disabled={page === 1}>Previous Page</button>
-      <label>{entries * (page - 1) + 1} - {entries * page} </label>
-      <button onClick={() => setPage(page + 1)} disabled={page === numPages}>Next Page</button>
+    <div style={{ width: '150px' }}>
+      <div
+        onClick={() => page !== 1 && setPage(page - 1)}
+        style={{ padding: '10px', display: 'inline-block' }}
+      >
+        <FontAwesomeIcon
+          icon={faChevronLeft}
+          style={{ color: page === 1 ? '#586671' : '#5d829f' }}
+        />
+      </div>
+      <label className='page-turner' style={{ userSelect: 'none' }}>{entries * (page - 1) + 1} - {entries * page}</label>
+      <div
+        onClick={() => page !== numPages && setPage(page + 1)}
+        style={{ padding: '10px', display: 'inline-block' }}
+      >
+        <FontAwesomeIcon
+          icon={faChevronRight}
+          style={{ color: page === numPages ? '#586671' : '#5d829f' }}
+        />
+      </div>
     </div>
   );
 };
+
 function ChartModal() {
   return (
     <form>
@@ -276,7 +342,7 @@ function DockerContainer() {
   );
   let components = []
   for (let i = 1; i < 10; i++) {
-    components.push(<TableComponent />)
+    components.push(<DockerComponent />)
   }
   return (
 
@@ -322,6 +388,20 @@ function DockerContainer() {
 
 
   )
+}
+
+function DockerComponent({ id = 0, name = "n/a", status = "n/a", image = "n/a" }) {
+  return (
+    <div className='row-container'>
+      <div className="table-row">
+        <div className="table-cell table-cell-outer-left">{name}</div>
+        <div className="table-cell">{id}</div>
+        <div className="table-cell">{status}</div>
+        <div className="table-cell table-cell-outer-right">{image}</div>
+      </div>
+    </div>
+  );
+
 }
 
 function App() {

@@ -1,3 +1,5 @@
 cvelistV5-main
-cve.db
 cve.db-journal
+backend\cve.db
+backend\__pycache__
+.env
