@@ -25,6 +25,21 @@ def get_range():
    result = cur.fetchall()
    print(result)
    return result
+
+@app.route('/getrange_asc_desc')
+def get_range(): 
+   lower_bound = int(request.args.get('lower_bound'))
+   upper_bound = int(request.args.get('upper_bound'))
+   asc_desc = request.args.get('asc_desc')
+   column = request.args.get('column')
+   upper_bound = upper_bound - lower_bound
+   con = sql.connect("cve.db")
+   cur = con.cursor()
+   cur.execute("SELECT * FROM cve LIMIT ? OFFSET ? ORDER BY ? ?", (upper_bound, lower_bound, column, asc_desc))
+
+   result = cur.fetchall()
+   print(result)
+   return result
    
 
 @app.route('/filter')
@@ -56,7 +71,8 @@ def filter(cve_id : str = None, title : str = None, description : str = None, at
    cur = con.cursor()
    cur.execute(query)
    result = cur.fetchall();
-   return render_template("filter.html", result)
+   print(result)
+   return result
 
 @app.route('/last_5_bs_graph')
 def last_5_bs_graph():
@@ -76,7 +92,8 @@ def last_5_bs_graph():
    final_data = []
    for i in range(len(data)):
       final_data.append([years[i], data[i]])
-   return render_template('last5bsgraph.html', final_data)
+   print(final_data)
+   return final_data
 
 @app.route('/num_cves_by_year')
 def num_cves_by_year():
@@ -94,7 +111,8 @@ def num_cves_by_year():
    final_data = []
    for i in range(len(data)):
       final_data.append([years[i], data[i]])
-   return render_template('numcveperyear.html', final_data)
+   print(final_data)
+   return final_data
 
 @app.route('/avg_base_by_year')
 def avg_base_by_year():
@@ -112,7 +130,8 @@ def avg_base_by_year():
    final_data = []
    for i in range(len(data)):
       final_data.append([years[i], data[i]])
-   return render_template('avgbaseyear.html', final_data)
+   print(final_data)
+   return final_data
 
 @app.route('/base_score_10_by_year')
 def base_score_10_by_year():
@@ -130,7 +149,8 @@ def base_score_10_by_year():
    final_data = []
    for i in range(len(data)):
       final_data.append([years[i], data[i]])
-   return render_template('base10year.html', final_data)
+   print(final_data)
+   return final_data
 
 @app.route('/complex_by_year')
 def complex_by_year():
@@ -152,7 +172,8 @@ def complex_by_year():
    final_data = []
    for i in range(len(data)):
       final_data.append([years[i], data[i]])
-   return render_template('complexperyear.html', final_data)
+   print(final_data)
+   return final_data
 
 @app.route('/availability_by_year')
 def availability_by_year():
@@ -174,7 +195,8 @@ def availability_by_year():
    final_data = []
    for i in range(len(data)):
       final_data.append([years[i], data[i]])
-   return render_template('availabilityperyear.html', final_data)
+   print(final_data)
+   return final_data
 
 if __name__ == '__main__':
    app.run(debug = True)
