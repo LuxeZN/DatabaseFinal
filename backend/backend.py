@@ -26,15 +26,18 @@ def get_range():
    temp_filter = "%" + filter + "%"
    if filter == "None":
       if asc_desc == "None":
+         #if both none just get range
          cur.execute("SELECT * FROM cve LIMIT ? OFFSET ?", (upper_bound, lower_bound))
       else:
+         #no filter but asc/desc just get range and sort
          cur.execute("SELECT * FROM cve LIMIT ? OFFSET ? ORDER BY ?", (upper_bound, lower_bound, asc_desc))
    else:
       if asc_desc == "None":
+         #if filter and no asc/desc just get range and filter
          cur.execute("SELECT * FROM cve LIMIT ? OFFSET ? WHERE ? LIKE ?", (upper_bound, lower_bound, column, temp_filter))
       else:
-         #filter
-         cur.execute("SELECT * FROM cve LIMIT ? OFFSET ? WHERE ? LIKE ? ORDER BY ?", (upper_bound, lower_bound, column, temp_filter, asc_desc))
+         #if both filter and asc/desc get range by filter and sort it
+         cur.execute("SELECT * FROM cve LIMIT ? OFFSET ? WHERE ? LIKE ? ORDER BY ? ?", (upper_bound, lower_bound, column, temp_filter, column, asc_desc))
    result = cur.fetchall()
    return result
 
