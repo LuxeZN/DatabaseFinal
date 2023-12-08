@@ -17,26 +17,24 @@ def home():
 def get_range(): 
    lower_bound = int(request.args.get('lower_bound'))
    upper_bound = int(request.args.get('upper_bound'))
-   upper_bound = upper_bound - lower_bound
-   con = sql.connect("cve.db")
-   cur = con.cursor()
-   cur.execute("SELECT * FROM cve LIMIT ? OFFSET ?", (upper_bound, lower_bound))
-
-   result = cur.fetchall()
-   return result
-
-
-@app.route('/getrange_asc_desc')
-def get_range_asc_dsc(): 
-   lower_bound = int(request.args.get('lower_bound'))
-   upper_bound = int(request.args.get('upper_bound'))
-   asc_desc = request.args.get('asc_desc')
+   asc_desc = request.args.get('sort')
    column = request.args.get('column')
+   filter = request.args.get('filter')
    upper_bound = upper_bound - lower_bound
    con = sql.connect("cve.db")
    cur = con.cursor()
-   cur.execute("SELECT * FROM cve LIMIT ? OFFSET ? ORDER BY ? ?", (upper_bound, lower_bound, column, asc_desc))
-
+   temp_filter = "%" + filter + "%"
+   if filter == "None":
+      if asc_desc == "None":
+         cur.execute("SELECT * FROM cve LIMIT ? OFFSET ?", (upper_bound, lower_bound))
+      else:
+         cur.execute("SELECT * FROM cve LIMIT ? OFFSET ? ORDER BY ?", (upper_bound, lower_bound, asc_desc))
+   else:
+      if asc_desc == "None":
+         cur.execute("SELECT * FROM cve LIMIT ? OFFSET ? WHERE ? LIKE ?", (upper_bound, lower_bound, column, temp_filter))
+      else:
+         #filter
+         cur.execute("SELECT * FROM cve LIMIT ? OFFSET ? WHERE ? LIKE ? ORDER BY ?", (upper_bound, lower_bound, column, temp_filter, asc_desc))
    result = cur.fetchall()
    return result
 
