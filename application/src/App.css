@@ -217,7 +217,33 @@ h2#swal2-title {
 }
 
 .cve-dropdown-area {
+  display: flex;
   color: #5d829f;
   text-align: left;
   margin: 0 10px 10px 10px;
+  flex-direction: row;
+  width: 100%;
+}
+
+.docker-controls {
+  
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 10px;
+    margin-right: 3%;
+    flex-direction: column;
+  
+}
+
+.docker-buttons {
+
+  padding: 4px;
+  border-radius: 5px;
+
+}
+
+.docker-buttons:hover {
+  background-color: #2b2e34;
+  color: white;
+  cursor: pointer;
 }

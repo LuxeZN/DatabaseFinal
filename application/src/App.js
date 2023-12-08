@@ -7,7 +7,7 @@ import { faker } from '@faker-js/faker';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSort, faSortUp, faSortDown, faChevronRight, faChevronLeft, faArrowRight, faCaretRight, faCaretDown } from '@fortawesome/free-solid-svg-icons';
+import { faSort, faSortUp, faSortDown, faChevronRight, faChevronLeft, faArrowRight, faCaretRight, faCaretDown, faPlay, faStop, faTrash, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 import { highlight, languages } from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
@@ -102,8 +102,8 @@ function TableComponent({ title = "n/a", ID = "n/a", description = "n/a", date =
   return (
     <div className="row-container">
       <div className="table-row">
-        <div className="table-cell table-cell-outer-left" style={{display: 'flex', alignContent: 'center'}}>
-        <FontAwesomeIcon icon={icon} className='dropdown' onClick={() => setOpen(!open)}/>
+        <div className="table-cell table-cell-outer-left" style={{ display: 'flex', alignContent: 'center' }}>
+          <FontAwesomeIcon icon={icon} className='dropdown' onClick={() => setOpen(!open)} />
           {ID}</div>
         <div className="table-cell cve-title">{title}</div>
         <div className="table-cell cell-description">
@@ -306,15 +306,15 @@ function ChartContainer() {
 function DockerModal() {
   return (
     <form>
-      <label htmlFor="containerName">Container Name:</label><br />
+      <label htmlFor="containerName">Container ID:</label><br />
       <input type="text" id="containerName" name="containerName" /><br />
-
+      <label htmlFor="cveID">CVE ID:</label><br />
+      <input type='text' id='cveId' name='cveId' /><br />
       <label htmlFor="ubuntuVersion">Ubuntu Version:</label><br />
       <select id="ubuntuVersion" name="ubuntuVersion">
         <option value="20.04">Ubuntu 20.04</option>
         <option value="18.04">Ubuntu 18.04</option>
         <option value="16.04">Ubuntu 16.04</option>
-        {/* Add more options as needed */}
       </select><br />
 
       <input type="checkbox" id="persistentStorage" name="persistentStorage" />
@@ -323,7 +323,7 @@ function DockerModal() {
   );
 }
 
-function CallDockerModal() {
+function CallDockerModal({ setRefresh }) {
 
   return (
     MySwal.fire({
@@ -331,7 +331,35 @@ function CallDockerModal() {
       html: DockerModal(),
       confirmButtonText: 'Submit',
       width: '20%',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        let containerName = document.getElementById("containerName").value;
+        let ubuntuVersion = document.getElementById("ubuntuVersion").value;
+        let cveId = document.getElementById("cveId").value;
+        let data = {
+          container_id: containerName,
+          cve_id: cveId,
+          status: 'offline',
+          image: ubuntuVersion,
+        }
+        fetch(`http://localhost:5000/containers_modify`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        })
+          .then(response => response.json())
+          .then(data => {
+            console.log('Success:', data);
+            setRefresh(prev => !prev);
+          })
+          .catch((error) => {
+            console.error('Error:', error);
+          });
+      }
     }
+
     )
   )
 };
@@ -340,15 +368,33 @@ function DockerContainer() {
   const [code, setCode] = React.useState(
     `                              DOCKER COMPOSE.YAML FILE .OR. DOCKERFILE GOES HERE`
   );
-  let components = []
-  for (let i = 1; i < 10; i++) {
-    components.push(<DockerComponent />)
-  }
+  const [components, setComponents] = useState([]);
+  const [refresh, setRefresh] = useState(false);
+  useEffect(() => {
+    fetch(`http://localhost:5000/containers`)
+      .then(response => response.json())
+      .then(data => {
+        let newComponents = [];
+        for (let i = 0; i < data.length; i++) {
+          newComponents.push(
+            <DockerComponent
+              id={data[i][0]}
+              name={data[i][1]}
+              status={data[i][2]}
+              image={data[i][3]}
+            />
+          );
+        }
+        setComponents(newComponents);
+
+      })
+      .catch(error => console.error('Error:', error));
+  }, [refresh]);
   return (
 
     <div>
       <div className='menuBar'>
-        <button onClick={CallDockerModal}>Add Container</button>
+        <button onClick={() => CallDockerModal({ setRefresh })}>Add Container</button>
       </div>
       <div className='parent-container'>
 
@@ -391,14 +437,87 @@ function DockerContainer() {
 }
 
 function DockerComponent({ id = 0, name = "n/a", status = "n/a", image = "n/a" }) {
+  const [open, setOpen] = useState(false);
+  const [contStatus, setContStatus] = useState(status);
+  let icon = faCaretRight;
+  open ? icon = faCaretDown : icon = faCaretRight;
+  status === 'online' ? status = <span style={{ color: 'green' }}>{status}</span> : status = <span style={{ color: 'red' }}>{status}</span>;
+
+  function handleStartClick() {
+    fetch(`http://localhost:5000/containers_enable/${id}`)
+      .then(response => response.json())
+      .then(data => {
+        console.log('Success:', data);
+        setContStatus('online');
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+  }
+
+  function handleStopClick() {
+    fetch(`http://localhost:5000/containers_disable/${id}`)
+      .then(response => response.json())
+      .then(data => {
+        console.log('Success:', data);
+        setContStatus('offline');
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+  }
+
+  function remove () {
+    fetch(`http://localhost:5000/containers_delete/${id}`)
+      .then(response => response.json())
+      .then(data => {
+        console.log('Success:', data);
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+  }
+
+  function openConfig () {
+
+  }
   return (
     <div className='row-container'>
       <div className="table-row">
-        <div className="table-cell table-cell-outer-left">{name}</div>
-        <div className="table-cell">{id}</div>
+        <div className="table-cell table-cell-outer-left" style={{ display: 'flex', alignContent: 'center' }}>
+          <FontAwesomeIcon icon={icon} className='dropdown' onClick={() => setOpen(!open)} />
+          {id}</div>
+
+        <div className="table-cell">{name}</div>
         <div className="table-cell">{status}</div>
         <div className="table-cell table-cell-outer-right">{image}</div>
+
       </div>
+      {open && (
+        <div className="dropdown-area">
+          <div className='cve-dropdown-area' style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div>
+            <span>ID: {id}</span>
+            <br />
+            <span style ={{fontSize:'20px'}}>Name: {name}</span>
+            <br />
+            <span style={{fontSize:'20px'}}>Status: {status}</span>
+            <br />
+            <span style ={{fontSize:'20px'}}>Image: {image}</span>
+            </div>
+            <div className='docker-controls' style={{textAlign:'right'}}>
+              <div>
+                <FontAwesomeIcon icon={faPlay} className='docker-buttons' onClick={handleStartClick} style={{color:`${contStatus === 'online' ? 'grey' : 'lightgreen'}`}}/>
+                <FontAwesomeIcon icon={faStop} className='docker-buttons' onClick={handleStopClick} style={{color:`${contStatus === 'online' ? 'red' : 'grey'}`}}/>
+                <FontAwesomeIcon icon={faTrash} className='docker-buttons' onClick={remove} style={{color:'grey'}}/>
+              </div>
+              <div>
+                <FontAwesomeIcon icon={faPenToSquare} onClick={openConfig} className='docker-buttons' />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 

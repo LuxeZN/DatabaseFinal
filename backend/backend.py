@@ -198,5 +198,57 @@ def availability_by_year():
    print(final_data)
    return final_data
 
+@app.route('/containers', methods = ['GET'])
+def containers():
+   con = sql.connect("cve.db")
+   cur = con.cursor()
+   cur.execute("SELECT * FROM containers")
+   result = cur.fetchall()
+   con.close()
+   return result
+
+
+
+@app.route('/containers_modify', methods = ['POST', 'DELETE'])
+def container_modify():
+   con = sql.connect("cve.db")
+   cur = con.cursor()
+   
+   
+   if request.method == 'POST':
+      data = request.get_json(force=True)
+      data['container_id'] = int(data['container_id'])
+      print(data)
+      cur.execute("INSERT into containers (container_id, cve_id, status, image) values (:container_id,:cve_id,:status,:image)", (data))
+      con.commit()
+   return "success"
+
+@app.route('/containers_enable/<container_id>', methods = ['GET'])
+def containers_enable(container_id : int = None):
+   con = sql.connect("cve.db")
+   cur = con.cursor()
+   cur.execute("UPDATE containers SET status = 'online' WHERE container_id = ?", (container_id,))
+   con.commit()
+   con.close()
+   return "success"
+
+@app.route('/containers_disable/<container_id>', methods = ['GET'])
+def containers_disable(container_id : int = None):
+   con = sql.connect("cve.db")
+   cur = con.cursor()
+   cur.execute("UPDATE containers SET status = 'offline' WHERE container_id = ?", (container_id,))
+   con.commit()
+   con.close()
+   return "success"
+
+@app.route('/containers_delete/<container_id>', methods = ['GET'])
+def containers_delete(container_id : int = None):
+   con = sql.connect("cve.db")
+   cur = con.cursor()
+   cur.execute("DELETE FROM containers WHERE container_id = ?", (container_id,))
+   con.commit()
+   con.close()
+   return "success"
+
 if __name__ == '__main__':
    app.run(debug = True)
