@@ -1,15 +1,16 @@
 from flask import Flask, render_template, request
 from flask_cors import CORS
 import sqlite3 as sql
+import docker
 app = Flask(__name__)   
 CORS(app, support_credentials=True)
+docker_client = docker.from_env()
 
 #Runs with `flask --app backend.py run --debug`
 
 @app.route('/')
 def home():
    return render_template('home.html')
-
 
 #EXAMPLE REQUEST: `http://localhost:5000/getrange?lower_bound=25&upper_bound=100`
 #EXAMPLE REQUEST: `http://localhost:5000/getrange?lower_bound=0&upper_bound=25
@@ -20,6 +21,7 @@ def get_range():
    asc_desc = request.args.get('sort')
    column = request.args.get('column')
    filter = request.args.get('filter')
+   print(lower_bound, upper_bound, asc_desc, column, filter)
    upper_bound = upper_bound - lower_bound
    con = sql.connect("cve.db")
    cur = con.cursor()
@@ -30,14 +32,22 @@ def get_range():
          cur.execute("SELECT * FROM cve LIMIT ? OFFSET ?", (upper_bound, lower_bound))
       else:
          #no filter but asc/desc just get range and sort
-         cur.execute("SELECT * FROM cve LIMIT ? OFFSET ? ORDER BY ?", (upper_bound, lower_bound, asc_desc))
+         cur.execute(f"SELECT * FROM cve ORDER BY {column} {asc_desc} LIMIT ? OFFSET ?", (upper_bound, lower_bound))
    else:
       if asc_desc == "None":
          #if filter and no asc/desc just get range and filter
          cur.execute("SELECT * FROM cve LIMIT ? OFFSET ? WHERE ? LIKE ?", (upper_bound, lower_bound, column, temp_filter))
       else:
          #if both filter and asc/desc get range by filter and sort it
-         cur.execute("SELECT * FROM cve LIMIT ? OFFSET ? WHERE ? LIKE ? ORDER BY ? ?", (upper_bound, lower_bound, column, temp_filter, column, asc_desc))
+        cur.execute(f"""
+         SELECT * FROM cve 
+         WHERE cve_id LIKE ? 
+         OR title LIKE ? 
+         OR description LIKE ?    
+         OR date LIKE ? 
+         ORDER BY {column} {asc_desc} 
+         LIMIT ? OFFSET ?
+         """, (temp_filter, temp_filter, temp_filter, temp_filter, upper_bound, lower_bound))   
    result = cur.fetchall()
    return result
 
@@ -208,7 +218,14 @@ def containers():
    con.close()
    return result
 
-
+@app.route('/dockerfile/<dockerfile>', methods = ['POST'])
+def dockerfile(dockerfile):
+   contents = request.get_json(force=True)
+   contents = contents['dockerFile']
+   print(contents)
+   with (open(f'./dockerfiles/{dockerfile}', "w")) as file:
+      file.write(contents)
+   return "success"
 
 @app.route('/containers_modify', methods = ['POST', 'DELETE'])
 def container_modify():
@@ -219,6 +236,13 @@ def container_modify():
    if request.method == 'POST':
       data = request.get_json(force=True)
       data['container_id'] = int(data['container_id'])
+      
+      try:
+         docker_client.containers.run(image=data['image'], name=data['cve_id'], command="sleep 1000", detach=True)
+      except docker.errors.ImageNotFound:
+         docker_client.images.pull(data['image'])
+      
+      
       print(data)
       cur.execute("INSERT into containers (container_id, cve_id, status, image) values (:container_id,:cve_id,:status,:image)", (data))
       con.commit()
@@ -228,7 +252,10 @@ def container_modify():
 def containers_enable(container_id : int = None):
    con = sql.connect("cve.db")
    cur = con.cursor()
-   cur.execute("UPDATE containers SET status = 'online' WHERE container_id = ?", (container_id,))
+   
+   docker_client.containers.get(container_id).start()
+   
+   cur.execute("UPDATE containers SET status = 'online' WHERE cve_id = ?", (container_id,))
    con.commit()
    con.close()
    return "success"
@@ -237,7 +264,10 @@ def containers_enable(container_id : int = None):
 def containers_disable(container_id : int = None):
    con = sql.connect("cve.db")
    cur = con.cursor()
-   cur.execute("UPDATE containers SET status = 'offline' WHERE container_id = ?", (container_id,))
+   
+   docker_client.containers.get(container_id).stop()
+   
+   cur.execute("UPDATE containers SET status = 'offline' WHERE cve_id = ?", (container_id,))
    con.commit()
    con.close()
    return "success"
@@ -246,7 +276,10 @@ def containers_disable(container_id : int = None):
 def containers_delete(container_id : int = None):
    con = sql.connect("cve.db")
    cur = con.cursor()
-   cur.execute("DELETE FROM containers WHERE container_id = ?", (container_id,))
+   
+   docker_client.containers.get(container_id).remove(force=True)
+   
+   cur.execute("DELETE FROM containers WHERE cve_id = ?", (container_id,))
    con.commit()
    con.close()
    return "success"
